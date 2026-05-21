@@ -11,11 +11,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Train and test
-        run: |
-          pip install -r requirements.txt
-          python src/train.py
-          pytest
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Train model
+        run: python src/train.py
+
+      - name: Run tests
+        run: PYTHONPATH=. pytest
 
       - name: Deploy to VM
         uses: appleboy/ssh-action@v1.0.3
@@ -24,7 +31,7 @@ jobs:
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
-            cd ML-ops-fraud-detection
+            cd ~/ML-ops-fraud-detection
             git pull
             docker stop fraud-api || true
             docker rm fraud-api || true
